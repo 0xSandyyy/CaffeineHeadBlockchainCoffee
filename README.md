@@ -43,10 +43,12 @@ $ anvil
 ### Deploy to Anvil
 ```shell
 #initialize anvil
-1. Anvil
+1. $ Anvil
 
 #start a new terminal window in the same directory 
-2. source .env
+Set up .env with ANVIL_RPC_URL, PRIVATE_KEY_ANVIL and DEFAULT_ANVIL_KEY
+
+2. $ source .env
 
 3. $ forge script script/deployCaffeineHeadBlockchainCoffee.s.sol --rpc-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY_ANVIL --broadcast
 ```

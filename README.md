@@ -1,7 +1,5 @@
 # CaffeineHeadBlockchainCoffee
 
-## Usage
-
 ### Build
 
 ```shell

@@ -12,51 +12,59 @@ contract CaffeineheadblockchaincoffeeTest is Test {
     function setUp() public {
         DeployScript ds = new DeployScript();
         coffeeContract = ds.run();
-        if (block.chainid == 11155111) owner = address(uint160(vm.envUint("DEFAULT_ANVIL_KEY)")));
+        if (block.chainid == 11155111) owner = address(uint160(vm.envUint("PRIVATE_KEY")));
+        else if (block.chainid == 31337) owner = address(uint160(vm.envUint("DEFAULT_ANVIL_KEY")));
         else owner = address(uint160(vm.envUint("PRIVATE_KEY")));
     }
 
     function test_storeProduct() public {
-        uint256 productId = 1;
-        string memory name = "Test Coffee";
-        string memory description = "Test Description";
-        uint256 price = 100;
-        uint256 availableQuantity = 10;
-        uint256 weightInGram = 250;
-        string memory expiryDate = "2024-12-31";
+        uint256 productId = 0;
+        string memory name = "Caffeine";
+        string memory description = "Caffeine Head Blockchain Coffee";
+        uint256 usdPrice = 1e18;
+        uint256 nativePrice = 1e18;
+        uint256 availableQuantity = 100;
+        uint256 weightInGram = 100;
+        string memory expiryDate = "2022-12-31";
 
         vm.startPrank(owner);
-        coffeeContract.store(productId, name, description, price, availableQuantity, weightInGram, expiryDate);
+        coffeeContract.store(
+            productId, name, description, usdPrice, nativePrice, availableQuantity, weightInGram, expiryDate
+        );
         vm.stopPrank();
 
         (
             string memory retrievedName,
             string memory retrievedDescription,
-            uint256 retrievedPrice,
+            uint256 retrievedUsdPrice,
+            uint256 retrievedNativePrice,
             uint256 retrievedAvailableQuantity,
             uint256 retrievedWeightInGram,
             string memory retrievedExpiryDate
         ) = coffeeContract.retrieve(productId);
         assertEq(retrievedName, name);
         assertEq(retrievedDescription, description);
-        assertEq(retrievedPrice, price);
+        assertEq(usdPrice, retrievedUsdPrice);
+        assertEq(nativePrice, retrievedNativePrice);
         assertEq(retrievedAvailableQuantity, availableQuantity);
         assertEq(retrievedWeightInGram, weightInGram);
         assertEq(retrievedExpiryDate, expiryDate);
     }
 
-    //  modifier for code resuability
     modifier storeProduct() {
-        uint256 productId = 1;
-        string memory name = "Test Coffee";
-        string memory description = "Test Description";
-        uint256 price = 1e18;
-        uint256 availableQuantity = 10;
-        uint256 weightInGram = 250;
-        string memory expiryDate = "2024-12-31";
+        uint256 productId = 0;
+        string memory name = "Caffeine";
+        string memory description = "Caffeine Head Blockchain Coffee";
+        uint256 usdPrice = 1e18;
+        uint256 nativePrice = 1e18;
+        uint256 availableQuantity = 100;
+        uint256 weightInGram = 100;
+        string memory expiryDate = "2022-12-31";
 
         vm.startPrank(owner);
-        coffeeContract.store(productId, name, description, price, availableQuantity, weightInGram, expiryDate);
+        coffeeContract.store(
+            productId, name, description, usdPrice, nativePrice, availableQuantity, weightInGram, expiryDate
+        );
         vm.stopPrank();
         _;
     }
@@ -72,62 +80,52 @@ contract CaffeineheadblockchaincoffeeTest is Test {
     }
 
     function test_updateProduct() public storeProduct {
-        uint256 productId = 1;
-        string memory name = "Test Coffee Updated";
-        string memory description = "Test Description Updated";
-        uint256 price = 1000;
+        uint256 productId = 0;
+        string memory name = "Caffeine";
+        string memory description = "Caffeine Head Blockchain Coffee";
+        uint256 usdPrice = 1;
+        uint256 nativePrice = 100;
         uint256 availableQuantity = 100;
-        uint256 weightInGram = 2500;
-        string memory expiryDate = "2025-12-31";
+        uint256 weightInGram = 100;
+        string memory expiryDate = "2022-12-31";
 
         vm.startPrank(owner);
-        coffeeContract.updateData(productId, name, description, price, availableQuantity, weightInGram, expiryDate);
+        coffeeContract.updateData(
+            productId, name, description, usdPrice, nativePrice, availableQuantity, weightInGram, expiryDate
+        );
         vm.stopPrank();
 
         (
             string memory retrievedName,
             string memory retrievedDescription,
-            uint256 retrievedPrice,
+            uint256 retrievedUsdPrice,
+            uint256 retrievedNativePrice,
             uint256 retrievedAvailableQuantity,
             uint256 retrievedWeightInGram,
             string memory retrievedExpiryDate
         ) = coffeeContract.retrieve(productId);
         assertEq(retrievedName, name);
         assertEq(retrievedDescription, description);
-        assertEq(retrievedPrice, price);
+        assertEq(usdPrice, retrievedUsdPrice);
+        assertEq(nativePrice, retrievedNativePrice);
         assertEq(retrievedAvailableQuantity, availableQuantity);
         assertEq(retrievedWeightInGram, weightInGram);
         assertEq(retrievedExpiryDate, expiryDate);
     }
 
-    function test_buysingleProductItem() public storeProduct {
+    function test_buysingleProductItemNative() public storeProduct {
         address buyer = address(1);
         vm.deal(buyer, 100e18);
 
         assertEq(buyer.balance, 100e18);
 
         vm.startPrank(buyer);
-        coffeeContract.buySingleProductItem{value: 1e18}(1);
-        vm.stopPrank();
-
-        assertEq(buyer.balance, 99e18);
-        assertEq(address(coffeeContract).balance, 1e18);
-        assertEq(coffeeContract.getBuyerToBoughtProduct(buyer).id, 1);
-    }
-
-    function test_buyProductItemInBulk() public storeProduct {
-        address buyer = address(1);
-        vm.deal(buyer, 100e18);
-
-        assertEq(buyer.balance, 100e18);
-
-        vm.startPrank(buyer);
-        coffeeContract.buyProductItemInBulk{value: 10e18}(1, 10);
+        coffeeContract.buySingleProductItemNative{value: 10e18}(0, 10);
         vm.stopPrank();
 
         assertEq(buyer.balance, 90e18);
         assertEq(address(coffeeContract).balance, 10e18);
-        assertEq(coffeeContract.getBuyerToBoughtProduct(buyer).id, 1);
+        assertEq(coffeeContract.getBuyerToBoughtProduct(buyer).id, 0);
         assertEq(coffeeContract.getBuyerToBoughtProduct(buyer).quantity, 10);
     }
 }
